@@ -115,7 +115,7 @@
             if (gameEnded) return;
 
             // Obtener el valor introducido por el usuario
-            const guess = document.getElementById("inputWord").value.toLowerCase().trim();
+            const guess = document.getElementById("inputWord").value.toUpperCase().trim();
 
             // Validar que la longitud de la palabra sea correcta
             if (guess.length !== secretWord.length) {
