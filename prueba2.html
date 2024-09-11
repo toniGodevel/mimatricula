@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Adivinanza Dinámico</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        input {
+            padding: 8px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 8px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #result, #history, #timer {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        .green {
+            color: green;
+            font-weight: bold;
+        }
+
+        .orange {
+            color: orange;
+            font-weight: bold;
+        }
+
+        .attempt {
+            margin-top: 10px;
+        }
+
+        .success-message {
+            color: green;
+            font-size: 1.5em;
+            margin-top: 20px;
+        }
+
+        .link {
+            margin-top: 20px;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="mainContainer"></div>
+
+    <script>
+        function getUrlParams() {
+            const queryString = window.location.search;
+            const urlParams = new URLSearchParams(queryString);
+            return urlParams;
+        }
+
+        function base64Encode(str) {
+            return btoa(encodeURIComponent(str));
+        }
+
+        function base64Decode(str) {
+            return decodeURIComponent(atob(str));
+        }
+
+        function initializeGame(secretWord, title) {
+            document.getElementById('mainContainer').innerHTML = `
+                <h1>${title}</h1>
+                <p>Introduce tu respuesta:</p>
+                <input type="text" id="inputWord" maxlength="5">
+                <button id="checkButton" onclick="checkGuess()">Comprobar</button>
+                <div id="result"></div>
+                <div id="timer">Tiempo: <span id="timeElapsed">0</span> segundos</div>
+                <div id="history">
+                    <h2>Historial de Intentos</h2>
+                    <ul id="attemptsList"></ul>
+                </div>
+                <div id="successMessage" class="success-message" style="display: none;"></div>
+            `;
+
+            let attempts = [];
+            let startTime = null;
+            let timerInterval = null;
+            let timeElapsed = 0;
+            let gameEnded = false;
+
+            function startTimer() {
+                if (startTime === null) {
+                    startTime = new Date();
+                    timerInterval = setInterval(() => {
+                        const currentTime = new Date();
+                        timeElapsed = Math.floor((currentTime - startTime) / 1000);
+                        document.getElementById("timeElapsed").textContent = timeElapsed;
+                    }, 1000);
+                }
+            }
+
+            function stopTimer() {
+                clearInterval(timerInterval);
+            }
+
+            window.checkGuess = function () {
+                if (gameEnded) return;
+
+                const guess = document.getElementById("inputWord").value.toLowerCase().trim();
+                if (guess.length !== secretWord.length) {
+                    alert(`Introduce una palabra de ${secretWord.length} letras.`);
+                    return;
+                }
+
+                startTimer();
+
+                let resultHTML = '';
+                let allCorrect = true;
+                for (let i = 0; i < secretWord.length; i++) {
+                    if (guess[i] === secretWord[i]) {
+                        resultHTML += `<span class="green">${guess[i]}</span>`;
+                    } else if (secretWord.includes(guess[i])) {
+                        resultHTML += `<span class="orange">${guess[i]}</span>`;
+                        allCorrect = false;
+                    } else {
+                        resultHTML += `<span>${guess[i]}</span>`;
+                        allCorrect = false;
+                    }
+                }
+
+                attempts.push(resultHTML);
+                updateHistory();
+
+                document.getElementById("result").innerHTML = `<p>Resultado: ${resultHTML}</p>`;
+
+                if (allCorrect) {
+                    stopTimer();
+                    gameEnded = true;
+                    document.getElementById("successMessage").textContent = `¡Felicidades! Adivinaste la palabra en ${attempts.length} intentos y ${timeElapsed} segundos.`;
+                    document.getElementById("successMessage").style.display = "block";
+                    document.getElementById("inputWord").disabled = true;
+                    document.getElementById("checkButton").disabled = true;
+                }
+
+                document.getElementById("inputWord").value = '';
+            };
+
+            function updateHistory() {
+                const attemptsList = document.getElementById("attemptsList");
+                attemptsList.innerHTML = '';
+                attempts.forEach((attempt, index) => {
+                    const listItem = document.createElement('li');
+                    listItem.classList.add('attempt');
+                    listItem.innerHTML = `Intento ${index + 1}: ${attempt}`;
+                    attemptsList.appendChild(listItem);
+                });
+            }
+        }
+
+        function showInputForm() {
+            document.getElementById('mainContainer').innerHTML = `
+                <h1>Configura tu Juego de Adivinanza</h1>
+                <p>Palabra Secreta (5 letras):</p>
+                <input type="text" id="secretWordInput" maxlength="5" required>
+                <p>Título del Juego:</p>
+                <input type="text" id="titleInput" required>
+                <button id="generateButton" onclick="generateLink()">Generar Enlace</button>
+                <div id="linkContainer" class="link"></div>
+            `;
+        }
+
+        function generateLink() {
+            const secretWord = document.getElementById('secretWordInput').value.trim().toLowerCase();
+            const title = document.getElementById('titleInput').value.trim();
+            
+            if (secretWord.length !== 5 || title.length === 0) {
+                alert("La palabra debe tener 5 letras y el título no puede estar vacío.");
+                return;
+            }
+
+            const encodedWord = base64Encode(secretWord);
+            const encodedTitle = base64Encode(title);
+            const link = `${window.location.origin}${window.location.pathname}?word=${encodedWord}&title=${encodedTitle}`;
+
+            document.getElementById('linkContainer').innerHTML = `<p>Tu enlace generado: <a href="${link}">${link}</a></p>`;
+        }
+
+        const params = getUrlParams();
+        if (params.has('word') && params.has('title')) {
+            const secretWord = base64Decode(params.get('word'));
+            const title = base64Decode(params.get('title'));
+            initializeGame(secretWord, title);
+        } else {
+            showInputForm();
+        }
+    </script>
+</body>
+</html>
