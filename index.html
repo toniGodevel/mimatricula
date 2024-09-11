@@ -43,7 +43,7 @@
             background-color: #0056b3;
         }
 
-        #result, #history {
+        #result, #history, #timer {
             margin-top: 20px;
             font-weight: bold;
         }
@@ -61,31 +61,61 @@
         .attempt {
             margin-top: 10px;
         }
+
+        .success-message {
+            color: green;
+            font-size: 1.5em;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Juego de Adivinanza de Palabra</h1>
+        <h1>Adivina mi matrícula</h1>
         <p>Introduce tu respuesta:</p>
         <input type="text" id="inputWord" maxlength="7">
-        <button onclick="checkGuess()">Comprobar</button>
+        <button id="checkButton" onclick="checkGuess()">Comprobar</button>
         <div id="result"></div>
+        <div id="timer">Tiempo: <span id="timeElapsed">0</span> segundos</div>
         <div id="history">
             <h2>Historial de Intentos</h2>
             <ul id="attemptsList"></ul>
         </div>
+        <div id="successMessage" class="success-message" style="display: none;"></div>
     </div>
 
     <script>
         // Definir la palabra secreta (debe ser de 5 letras en este ejemplo)
         const secretWord = "1111MTZ";
 
-        // Almacenar historial de intentos
+        // Almacenar historial de intentos y el tiempo
         let attempts = [];
+        let startTime = null;
+        let timerInterval = null;
+        let timeElapsed = 0;
+        let gameEnded = false;
+
+        function startTimer() {
+            if (startTime === null) {
+                startTime = new Date(); // Registrar el tiempo de inicio
+                timerInterval = setInterval(() => {
+                    const currentTime = new Date();
+                    timeElapsed = Math.floor((currentTime - startTime) / 1000);
+                    document.getElementById("timeElapsed").textContent = timeElapsed;
+                }, 1000);
+            }
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
 
         function checkGuess() {
+            // Verificar si el juego ya terminó
+            if (gameEnded) return;
+
             // Obtener el valor introducido por el usuario
-            const guess = document.getElementById("inputWord").value.toUpperCase().trim();
+            const guess = document.getElementById("inputWord").value.toLowerCase().trim();
 
             // Validar que la longitud de la palabra sea correcta
             if (guess.length !== secretWord.length) {
@@ -93,15 +123,21 @@
                 return;
             }
 
+            // Iniciar el temporizador en el primer intento
+            startTimer();
+
             // Comparar la palabra introducida con la palabra secreta
             let resultHTML = '';
+            let allCorrect = true; // Variable para verificar si todas las letras coinciden
             for (let i = 0; i < secretWord.length; i++) {
                 if (guess[i] === secretWord[i]) {
                     resultHTML += `<span class="green">${guess[i]}</span>`;
                 } else if (secretWord.includes(guess[i])) {
                     resultHTML += `<span class="orange">${guess[i]}</span>`;
+                    allCorrect = false; // Si alguna letra no está en la posición correcta, no es todo correcto
                 } else {
                     resultHTML += `<span>${guess[i]}</span>`;
+                    allCorrect = false; // Si alguna letra no está en la palabra, no es todo correcto
                 }
             }
 
@@ -113,6 +149,16 @@
             const resultDiv = document.getElementById("result");
             resultDiv.innerHTML = `<p>Resultado: ${resultHTML}</p>`;
 
+            // Verificar si todas las letras son correctas
+            if (allCorrect) {
+                stopTimer();
+                gameEnded = true;
+                document.getElementById("successMessage").textContent = `¡Felicidades! Adivinaste la palabra en ${attempts.length} intentos y ${timeElapsed} segundos.`;
+                document.getElementById("successMessage").style.display = "block";
+                document.getElementById("inputWord").disabled = true; // Deshabilitar el input
+                document.getElementById("checkButton").disabled = true; // Deshabilitar el botón
+            }
+
             // Limpiar el campo de entrada
             document.getElementById("inputWord").value = '';
         }
@@ -123,7 +169,7 @@
             attempts.forEach((attempt, index) => {
                 const listItem = document.createElement('li');
                 listItem.classList.add('attempt');
-                listItem.innerHTML =    attempt;
+                listItem.innerHTML = `Intento ${index + 1}: ${attempt}`;
                 attemptsList.appendChild(listItem);
             });
         }
