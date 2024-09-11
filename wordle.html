@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adivina Mi Matrícula</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        input {
+            padding: 8px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 8px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #result, #history {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        .green {
+            color: green;
+            font-weight: bold;
+        }
+
+        .orange {
+            color: orange;
+            font-weight: bold;
+        }
+
+        .attempt {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Juego de Adivinanza de Palabra</h1>
+        <p>Introduce tu respuesta:</p>
+        <input type="text" id="inputWord" maxlength="7">
+        <button onclick="checkGuess()">Comprobar</button>
+        <div id="result"></div>
+        <div id="history">
+            <h2>Historial de Intentos</h2>
+            <ul id="attemptsList"></ul>
+        </div>
+    </div>
+
+    <script>
+        // Definir la palabra secreta (debe ser de 5 letras en este ejemplo)
+        const secretWord = "1111MTZ";
+
+        // Almacenar historial de intentos
+        let attempts = [];
+
+        function checkGuess() {
+            // Obtener el valor introducido por el usuario
+            const guess = document.getElementById("inputWord").value.toUpperCase().trim();
+
+            // Validar que la longitud de la palabra sea correcta
+            if (guess.length !== secretWord.length) {
+                alert(`Introduce una palabra de ${secretWord.length} letras.`);
+                return;
+            }
+
+            // Comparar la palabra introducida con la palabra secreta
+            let resultHTML = '';
+            for (let i = 0; i < secretWord.length; i++) {
+                if (guess[i] === secretWord[i]) {
+                    resultHTML += `<span class="green">${guess[i]}</span>`;
+                } else if (secretWord.includes(guess[i])) {
+                    resultHTML += `<span class="orange">${guess[i]}</span>`;
+                } else {
+                    resultHTML += `<span>${guess[i]}</span>`;
+                }
+            }
+
+            // Agregar el intento al historial
+            attempts.push(resultHTML);
+            updateHistory();
+
+            // Mostrar el resultado del intento actual
+            const resultDiv = document.getElementById("result");
+            resultDiv.innerHTML = `<p>Resultado: ${resultHTML}</p>`;
+
+            // Limpiar el campo de entrada
+            document.getElementById("inputWord").value = '';
+        }
+
+        function updateHistory() {
+            const attemptsList = document.getElementById("attemptsList");
+            attemptsList.innerHTML = ''; // Limpiar el historial anterior
+            attempts.forEach((attempt, index) => {
+                const listItem = document.createElement('li');
+                listItem.classList.add('attempt');
+                listItem.innerHTML =    attempt;
+                attemptsList.appendChild(listItem);
+            });
+        }
+    </script>
+</body>
+</html>
