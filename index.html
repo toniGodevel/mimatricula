@@ -167,7 +167,7 @@
             const attemptsList = document.getElementById("attemptsList");
             attemptsList.innerHTML = ''; // Limpiar el historial anterior
             attempts.forEach((attempt, index) => {
-                const listItem = document.createElement('li');
+                const listItem = document.createElement('ul');
                 listItem.classList.add('attempt');
                 listItem.innerHTML = `Intento ${index + 1}: ${attempt}`;
                 attemptsList.appendChild(listItem);
